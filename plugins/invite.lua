@@ -1,92 +1,45 @@
 do
-
-local function callback(extra, success, result)
-	local receiver = extra.receiver
-	local username = extra.username
-	if success == 1 then
-		print("Success!")
-	else
-		send_large_msg(resuser, "Sorry, i can't invite @"..username)
+local function callbackres(extra, success, result)
+--vardump(result)
+  local user = 'user#id'..result.peer_id
+	local chat = 'chat#id'..extra.chatid
+	local channel = 'channel#id'..extra.chatid
+	if is_banned(result.id, extra.chatid) then 
+        send_large_msg(chat, 'User is banned.')
+        send_large_msg(channel, 'User is banned.')
+	elseif is_gbanned(result.id) then
+	    send_large_msg(chat, 'User is globaly banned.')
+		send_large_msg(channel, 'User is globaly banned.')
+	else    
+	    chat_add_user(chat, user, ok_cb, false) 
+		channel_invite(channel, user, ok_cb, false)
 	end
 end
-
-local function resuser(extra, success, result)
-  local receiver = extra.receiver
-  local username = extra.username
-  if success == 1 then
-    local user = "user#id"..result.id
-    if string.find(receiver, 'channel#id') then
-      channel_invite_user(receiver, user, callback, {receiver=receiver, username=username})
-    else
-      chat_add_user(receiver, user, callback, {receiver=receiver, username=username})
-    end
-  else
-  	send_large_msg(receiver, "User not found!")
+function run(msg, matches)
+  local data = load_data(_config.moderation.data)
+  if not is_momod(msg) then
+	return
   end
+  if not is_admin1(msg) then -- For admins only !
+		return 'Only admins can invite.'
+  end
+  if not is_realm(msg) then
+    if data[tostring(msg.to.id)]['settings']['lock_member'] == 'yes' and not is_admin1(msg) then
+		  return 'Group is private.'
+    end
+  end
+	if msg.to.type ~= 'chat' or msg.to.type ~= 'channel' then 
+		local cbres_extra = {chatid = msg.to.id}
+		local username = matches[1]
+		local username = username:gsub("@","")
+		resolve_username(username,  callbackres, cbres_extra)
+	end
 end
-
-local function get_msg_callback(extra, success, result)
-  if success ~= 1 then return end
-  local get_cmd = extra.get_cmd
-  local receiver = extra.receiver
-  local user_id = result.from.peer_id
-  local chat_id = result.to.id
-  if result.from.username then
-    username = '@'..result.from.username
-  else
-    username = string.gsub(result.from.print_name, '_', ' ')
-  end
-  if get_cmd == 'invite' then
-    if user_id == our_id then
-      return nil
-    end
-    local user = "user#id"..user_id
-    if string.find(receiver, 'channel#id') then
-      channel_invite_user(receiver, user, callback, {receiver=receiver, username=username})
-    else
-      chat_add_user(receiver, user, callback, {receiver=receiver, username=username})
-    end
-  end
-end
-
-local function run(msg, matches)
-  local receiver = get_receiver(msg)
-  local get_cmd = matches[1]
-  if msg.to.type == "chat" then
-    local chat = "chat#id"..msg.to.id
-    resolve_username(username, resuser, {receiver=get_receiver(msg), username=username})
-  end
-  
-  if msg.to.type == "channel" then
-    if matches[1] == "invite" then
-      if not is_momod(msg) then
-        return
-      end
-      if not matches[2] and msg.reply_id then
-        get_message(msg.reply_id, get_msg_callback, {get_cmd=get_cmd, receiver=receiver})
-      end
-      if not matches[2] then
-        return
-      end
-      local username = string.gsub(matches[2], "@", "")
-      res_user(username, resuser, {receiver=get_receiver(msg), username=username})
-    end
-  end
-
-end
-
 return {
-  description = "Invite other user to the chat group", 
-  usage = {
-  	moderator = {
-  		"!invite <username> : Invite other user to this chat",
-  		},
-  	},
-  patterns = {
-    "^/(invite) (.*)$",
-    "^/(invite)$",
-  }, 
-  run = run,
-  moderated = true 
+    patterns = {
+      "^[#!/]invite (.*)$"
+    },
+    run = run
 }
+
 end
