@@ -1,4 +1,4 @@
 [submodule "tg"]
 	path = tg
-	url = https://github.com/shorten-Team/tg-supergroups
+	url = https://github.com/shorten-Team/tg
 	branch = test
