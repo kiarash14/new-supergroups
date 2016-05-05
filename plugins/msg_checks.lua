@@ -10,7 +10,7 @@ if is_chat_msg(msg) or is_super_group(msg) then
 	local to_chat = msg.to.type == 'chat'
 	if data[tostring(msg.to.id)] and data[tostring(msg.to.id)]['settings'] then
 		settings = data[tostring(msg.to.id)]['settings']
-			else
+	else
 		return
 	end
 	if settings.lock_arabic then
@@ -23,6 +23,11 @@ if is_chat_msg(msg) or is_super_group(msg) then
 	else
 		lock_rtl = 'no'
 	end
+		if settings.lock_tgservice then
+		lock_tgservice = settings.lock_tgservice
+	else
+		lock_tgservice = 'no'
+	end
 	if settings.lock_link then
 		lock_link = settings.lock_link
 	else
@@ -33,16 +38,6 @@ if is_chat_msg(msg) or is_super_group(msg) then
 	else
 		lock_member = 'no'
 	end
-	if settings.lock_badw then
-		lock_badw = settings.lock_badw
-	else
-		lock_badw = 'no'
-	end
-	if settings.lock_eng then
-		lock_eng = settings.lock_eng
-	else
-		lock_eng = 'no'
-	end
 	if settings.lock_spam then
 		lock_spam = settings.lock_spam
 	else
@@ -52,11 +47,6 @@ if is_chat_msg(msg) or is_super_group(msg) then
 		lock_sticker = settings.lock_sticker
 	else
 		lock_sticker = 'no'
-	end
-		if settings.lock_emoji then
-		lock_emoji = settings.lock_emoji
-	else
-		lock_emoji = 'no'
 	end
 	if settings.lock_contacts then
 		lock_contacts = settings.lock_contacts
@@ -92,36 +82,21 @@ if is_chat_msg(msg) or is_super_group(msg) then
 					kick_user(msg.from.id, msg.to.id)
 				end
 		end
-		local is_eng_msg = msg.text:match("[Aa][Qq][Ww][Ee][Rr][Tt][Yy][Uu][Ii][Ll][Zz][Nn][Mm]") or msg.text:match("[Oo][Pp][Ss][Dd][Ff][Gg][Hh][Jj][Kk][xX][Cc][Vv][Bb]")
-			local is_bot = msg.text:match("?[Ss][Tt][Aa][Rr][Tt]=")
-			if is_eng_msg and lock_eng == "yes" and not is_bot then
+		if msg.service then 
+			if lock_tgservice == "yes" then
 				delete_msg(msg.id, ok_cb, false)
-				if strict == "yes" or to_chat then
-					kick_user(msg.from.id, msg.to.id)
-					return "English is not allowed here"
-				end
-		end
-		local is_emoji_msg = msg.text:match("[😀],[😬],[😂],[😃]") or msg.text:match("[😐][🔫][😜]")
-			local is_bot = msg.text:match("m")
-			if is_emoji_msg and lock_emoji == "yes" and not is_bot then
-				delete_msg(msg.id, ok_cb, false)
-				if strict == "yes" or to_chat then
-					kick_user(msg.from.id, msg.to.id)
-				end
-		end
-		local is_badw_msg = msg.text:match("[کیر][کص][کس]") or msg.text:match("[kK][oO][Ss]") or msg.text:match("[Kk][Ii][rR]") or msg.text:match("[Ff][uU][cC][Kk]")
-			local is_bot = msg.text:match("m")
-			if is_badw_msg and lock_badw == "yes" and not is_bot then
-				delete_msg(msg.id, ok_cb, false)
-				if strict == "yes" or to_chat then
-					kick_user(msg.from.id, msg.to.id)
+				if to_chat then
+					return
 				end
 			end
+		end
+
+
 			local is_squig_msg = msg.text:match("[\216-\219][\128-\191]")
 			if is_squig_msg and lock_arabic == "yes" then
 				delete_msg(msg.id, ok_cb, false)
 				if strict == "yes" or to_chat then
-					kick_user(msg.from.id, msg.to.id)
+					 kick_user(msg.from.id, msg.to.id)
 				end
 			end
 			local print_name = msg.from.print_name
@@ -147,21 +122,12 @@ if is_chat_msg(msg) or is_super_group(msg) then
 					if strict == "yes" or to_chat then
 						kick_user(msg.from.id, msg.to.id)
 					end
-			end
-			local is_eng_title = msg.media.title:match("[Aa][Qq][Ww][Ee][Rr][Tt][Yy][Uu][Ii][Ll][Zz][Nn][Mm]") or msg.media.title:match("[Oo][Pp][Ss][Dd][Ff][Gg][Hh][Jj][Kk][xX][Cc][Vv][Bb]")
-				if is_eng_title and lock_eng == "yes" then
-					delete_msg(msg.id, ok_cb, false)
-					if strict == "yes" or to_chat then
-						kick_user(msg.from.id, msg.to.id)
-						return "English is not allowed here"
-					end
-			end
+				end
 				local is_squig_title = msg.media.title:match("[\216-\219][\128-\191]")
 				if is_squig_title and lock_arabic == "yes" then
 					delete_msg(msg.id, ok_cb, false)
 					if strict == "yes" or to_chat then
 						kick_user(msg.from.id, msg.to.id)
-						return "farsi is not allowed here"
 					end
 				end
 			end
@@ -172,15 +138,7 @@ if is_chat_msg(msg) or is_super_group(msg) then
 					if strict == "yes" or to_chat then
 						kick_user(msg.from.id, msg.to.id)
 					end
-			end
-			local is_eng_desc = msg.media.description:match("[Aa][Qq][Ww][Ee][Rr][Tt][Yy][Uu][Ii][Ll][Zz][Nn][Mm]") or msg.media.description:match("[Oo][Pp][Ss][Dd][Ff][Gg][Hh][Jj][Kk][xX][Cc][Vv][Bb]")
-				if is_eng_desc and lock_eng == "yes" then
-					delete_msg(msg.id, ok_cb, false)
-					if strict == "yes" or to_chat then
-						kick_user(msg.from.id, msg.to.id)
-						return "English is not allowed here"
-					end
-			end
+				end
 				local is_squig_desc = msg.media.description:match("[\216-\219][\128-\191]")
 				if is_squig_desc and lock_arabic == "yes" then
 					delete_msg(msg.id, ok_cb, false)
@@ -196,14 +154,7 @@ if is_chat_msg(msg) or is_super_group(msg) then
 					if strict == "yes" or to_chat then
 						kick_user(msg.from.id, msg.to.id)
 					end
-			end
-				local is_eng_caption = msg.media.caption:match("[Aa][Qq][Ww][Ee][Rr][Tt][Yy][Uu][Ii][Ll][Zz][Nn][Mm]") or msg.media.caption:match("[Oo][Pp][Ss][Dd][Ff][Gg][Hh][Jj][Kk][xX][Cc][Vv][Bb]")
-				if is_eng_caption and lock_eng == "yes" then
-					delete_msg(msg.id, ok_cb, false)
-					if strict == "yes" or to_chat then
-						kick_user(msg.from.id, msg.to.id)
-					end
-			end
+				end
 				local is_squig_caption = msg.media.caption:match("[\216-\219][\128-\191]")
 					if is_squig_caption and lock_arabic == "yes" then
 						delete_msg(msg.id, ok_cb, false)
@@ -219,13 +170,6 @@ if is_chat_msg(msg) or is_super_group(msg) then
 					end
 				end
 				if lock_sticker == "yes" and msg.media.caption:match("sticker.webp") then
-					delete_msg(msg.id, ok_cb, false)
-					if strict == "yes" or to_chat then
-						kick_user(msg.from.id, msg.to.id)
-					end
-				end
-		
-if lock_emoji == "yes" and msg.media.caption:match("1") then
 					delete_msg(msg.id, ok_cb, false)
 					if strict == "yes" or to_chat then
 						kick_user(msg.from.id, msg.to.id)
@@ -276,13 +220,6 @@ if lock_emoji == "yes" and msg.media.caption:match("1") then
 			if msg.fwd_from.title then
 				local is_link_title = msg.fwd_from.title:match("[Tt][Ee][Ll][Ee][Gg][Rr][Aa][Mm].[Mm][Ee]/") or msg.fwd_from.title:match("[Tt][Ll][Gg][Rr][Mm].[Mm][Ee]/")
 				if is_link_title and lock_link == "yes" then
-					delete_msg(msg.id, ok_cb, false)
-					if strict == "yes" or to_chat then
-						kick_user(msg.from.id, msg.to.id)
-					end
-			end
-			local is_emoji_title = msg.fwd_from.title:match("emoji") or msg.fwd_from.title:match("e")
-				if is_emoji_title and lock_emoji == "yes" then
 					delete_msg(msg.id, ok_cb, false)
 					if strict == "yes" or to_chat then
 						kick_user(msg.from.id, msg.to.id)
